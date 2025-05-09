@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Alembic versions cache
+alembic/versions/__pycache__/
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# SQLite and log files
+*.sqlite3
+*.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
