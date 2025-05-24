@@ -6,7 +6,6 @@
 - Python  
 - FastAPI  
 - PostgreSQL  
-- JWT  
 
 **Descrição:** API para gerenciamento de produtos, categorias, fornecedores e movimentações de estoque.  
 **Objetivo:**  
@@ -33,10 +32,10 @@ Sistema de Gestão de Estoque, responsável por gerenciar produtos, categorias, 
 
 ## 3. Etapas de Entrega (Cronograma Detalhado)  
 
-**Etapa 1 (16/05):** Documentação 
-**Etapa 2 (30/05):** API + Controle de Estoque  
-**Etapa 3 (18/06):** Relatórios Avançados  
-**Etapa 4 (18/07):** Testes Finais e Entrega do Projeto  
+## **Etapa 1 (16/05):** Documentação 
+## **Etapa 2 (30/05):** API + Controle de Estoque  
+## **Etapa 3 (18/06):** Relatórios Avançados  
+## **Etapa 4 (18/07):** Testes Finais e Entrega do Projeto  
 
 ---  
 
