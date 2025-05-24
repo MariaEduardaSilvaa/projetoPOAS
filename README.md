@@ -1,19 +1,4 @@
-# Documentação do Projeto: Sistema de Gestão de Estoque
-
-## 1. Visão Geral  
-
-**Tecnologia Utilizada:**  
-- Python  
-- FastAPI  
-- PostgreSQL  
-- JWT  
-
-**Descrição:** API para gerenciamento de produtos, categorias, fornecedores e movimentações de estoque.  
-**Objetivo:**  
-
----  
-
-## 2. Descrição Detalhada do Projeto  
+## 1. Descrição Detalhada do Projeto  
 
 ### O que é o projeto?  
 Sistema de Gestão de Estoque, responsável por gerenciar produtos, categorias, fornecedores e movimentações de estoque, além de gerar relatórios e garantir segurança e desempenho.  
