@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum, Text, DECIMAL, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum, DateTime, Text, DECIMAL, ForeignKey
+from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import declarative_base, relationship
 import datetime
 
@@ -50,6 +51,8 @@ class Movimentacao(Base):
     mov_motivo = Column(String(500))
     mov_data = Column(DateTime, default=datetime.datetime.utcnow)
     mov_quantidade = Column(Integer)
+    mov_tipo = Column(SqlEnum('entrada', 'saida', name='movimentacao_tipo'), nullable=False)
 
     produto = relationship('Produto')
     cliente = relationship('Cliente')
+
