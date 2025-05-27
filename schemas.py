@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 from decimal import Decimal
 from datetime import datetime
 
@@ -12,7 +12,7 @@ class CategoriaCreate(CategoriaBase):
 class Categoria(CategoriaBase):
     cat_id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProdutoBase(BaseModel):
     pro_nome: str
@@ -35,7 +35,7 @@ class Produto(ProdutoBase):
     pro_data_cadastro: datetime
     categoria: Optional[Categoria] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class FornecedorBase(BaseModel):
     for_nome: str
@@ -48,4 +48,21 @@ class FornecedorCreate(FornecedorBase):
 class Fornecedor(FornecedorBase):
     for_id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class MovimentacaoBase(BaseModel):
+    mov_pro_id: int
+    mov_cli_id: Optional[int] = None
+    mov_motivo: Optional[str] = None
+    mov_quantidade: int
+    mov_tipo: Literal["entrada", "saida"]
+
+class MovimentacaoCreate(MovimentacaoBase):
+    pass
+
+class Movimentacao(MovimentacaoBase):
+    mov_id: int
+    mov_data: datetime
+
+    class Config:
+        from_attributes = True
