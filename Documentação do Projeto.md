@@ -5,10 +5,10 @@
 **Tecnologia Utilizada:**  
 - Python  
 - FastAPI  
-- PostgreSQL  
+- MYSQL  
 
 **Descrição:** API para gerenciamento de produtos, categorias, fornecedores e movimentações de estoque.  
-**Objetivo:**  
+**Objetivo:**
 
 ---  
 
