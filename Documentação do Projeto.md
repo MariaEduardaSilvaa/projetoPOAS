@@ -27,6 +27,17 @@ Sistema de Gestão de Estoque, responsável por gerenciar produtos, categorias, 
 
 ### 2.2 Arquitetura do Código  
 
+```
+├── README.md
+├── Documentação do projeto.md    
+├── schemas.py
+├── database.py
+├── models.py
+  ├── models.py          
+├── main.py            
+└── requirements.txt   
+ ```
+---
 
 ---  
 
