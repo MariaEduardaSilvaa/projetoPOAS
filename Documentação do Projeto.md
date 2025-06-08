@@ -1,4 +1,4 @@
-**Documentação do Projeto: Sistema de Gestão de Estoque**  
+# Documentação do Projeto: Sistema de Gestão de Estoque
 
 ### **1. Visão Geral**  
 **Tecnologia Utilizada:**  
