@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
-from models.models import Produto, Categoria, Fornecedor
-from database import SessionLocal, engine, Base
+from database import SessionLocal, engine
+from models.models import Produto, Categoria, Fornecedor, Cliente, Movimentacao, Base
 import schemas
-from models.models import Produto, Categoria, Fornecedor, Cliente, Movimentacao
 
 Base.metadata.create_all(bind=engine)
 
@@ -46,6 +45,28 @@ def atualizar_produto(id: int, produto: schemas.ProdutoUpdate, db: Session = Dep
     db.refresh(db_prod)
     return db_prod
 
+from fastapi import status
+
+@app.put("/produtos/{id}", response_model=schemas.Produto)
+def atualizar_produto(id: int, produto: schemas.ProdutoUpdate, db: Session = Depends(get_db)):
+    db_prod = db.query(Produto).filter(Produto.pro_id == id).first()
+    if not db_prod:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    for key, value in produto.dict(exclude_unset=True).items():
+        setattr(db_prod, key, value)
+    db.commit()
+    db.refresh(db_prod)
+    return db_prod
+
+@app.delete("/produtos/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def deletar_produto(id: int, db: Session = Depends(get_db)):
+    produto = db.query(Produto).filter(Produto.pro_id == id).first()
+    if not produto:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    db.delete(produto)
+    db.commit()
+    return
+
 @app.post("/categorias", response_model=schemas.Categoria)
 def criar_categoria(categoria: schemas.CategoriaCreate, db: Session = Depends(get_db)):
     db_cat = Categoria(**categoria.dict())
@@ -69,8 +90,6 @@ def criar_fornecedor(fornecedor: schemas.FornecedorCreate, db: Session = Depends
 @app.get("/fornecedores", response_model=list[schemas.Fornecedor])
 def listar_fornecedores(db: Session = Depends(get_db)):
     return db.query(Fornecedor).all()
-
-from models.models import Produto, Categoria, Fornecedor, Cliente, Movimentacao
 
 
 @app.post("/clientes", response_model=schemas.Cliente)
