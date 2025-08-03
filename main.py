@@ -1,169 +1,112 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
-from database import engine, Base, get_session
+from models.models import Produto, Categoria, Fornecedor
+from database import SessionLocal, engine, Base
+import schemas
 from models.models import Produto, Categoria, Fornecedor, Cliente, Movimentacao
-from schemas import ProdutoCreate, ProdutoUpdate, Produto, CategoriaCreate, Categoria, FornecedorCreate, Fornecedor, MovimentacaoCreate, Movimentacao, ClienteCreate, Cliente
-from typing import List
-from datetime import datetime
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.post("/produtos", response_model=Produto)
-def criar_produto(produto: ProdutoCreate, session: Session = Depends(get_session)):
+def get_db():
+    db = SessionLocal()
     try:
-        if produto.pro_cat_id:
-            categoria = session.query(Categoria).filter(Categoria.cat_id == produto.pro_cat_id).first()
-            if not categoria:
-                raise HTTPException(status_code=400, detail="Categoria não encontrada")
+        yield db
+    finally:
+        db.close()
 
-        db_produto = Produto(
-            pro_nome=produto.pro_nome,
-            pro_descricao=produto.pro_descricao,
-            pro_custo=float(produto.pro_custo),
-            pro_preco=float(produto.pro_preco),
-            pro_quantidade=produto.pro_quantidade,
-            pro_status=produto.pro_status,
-            pro_marca=produto.pro_marca,
-            pro_cat_id=produto.pro_cat_id,
-            pro_data_cadastro=datetime.now()
-        )
+@app.post("/produtos", response_model=schemas.Produto)
+def criar_produto(produto: schemas.ProdutoCreate, db: Session = Depends(get_db)):
+    db_prod = Produto(**produto.dict())
+    db.add(db_prod)
+    db.commit()
+    db.refresh(db_prod)
+    return db_prod
 
-        session.add(db_produto)
-        session.commit()
-        session.refresh(db_produto)  
+@app.get("/produtos", response_model=list[schemas.Produto])
+def listar_produtos(db: Session = Depends(get_db)):
+    return db.query(Produto).all()
 
-        return {
-            "pro_id": db_produto.pro_id,
-            "pro_nome": db_produto.pro_nome,
-            "pro_descricao": db_produto.pro_descricao,
-            "pro_custo": float(db_produto.pro_custo),
-            "pro_preco": float(db_produto.pro_preco),
-            "pro_quantidade": db_produto.pro_quantidade,
-            "pro_status": db_produto.pro_status,
-            "pro_marca": db_produto.pro_marca,
-            "pro_cat_id": db_produto.pro_cat_id,
-            "pro_data_cadastro": db_produto.pro_data_cadastro
-        }
+@app.get("/produtos/{id}", response_model=schemas.Produto)
+def buscar_produto(id: int, db: Session = Depends(get_db)):
+    produto = db.query(Produto).filter(Produto.pro_id == id).first()
+    if not produto:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return produto
 
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao criar produto: {str(e)}")
+@app.post("/produtos/{id}", response_model=schemas.Produto)
+def atualizar_produto(id: int, produto: schemas.ProdutoUpdate, db: Session = Depends(get_db)):
+    db_prod = db.query(Produto).filter(Produto.pro_id == id).first()
+    if not db_prod:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    for key, value in produto.dict().items():
+        setattr(db_prod, key, value)
+    db.commit()
+    db.refresh(db_prod)
+    return db_prod
 
-@app.delete("/produtos/{id}")
-def deletar_produto(id: int, session: Session = Depends(get_session)):
-    try:
-        produto = session.get(Produto, id)
-        if not produto:
-            raise HTTPException(status_code=404, detail="Produto não encontrado")
-        
-        session.delete(produto)
-        session.commit()
-        return {"ok": True}
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao deletar produto: {str(e)}")
+@app.post("/categorias", response_model=schemas.Categoria)
+def criar_categoria(categoria: schemas.CategoriaCreate, db: Session = Depends(get_db)):
+    db_cat = Categoria(**categoria.dict())
+    db.add(db_cat)
+    db.commit()
+    db.refresh(db_cat)
+    return db_cat
 
-@app.post("/categorias", response_model=Categoria)
-def criar_categoria(categoria: CategoriaCreate, session: Session = Depends(get_session)):
-    try:
-        nova_categoria = Categoria(**categoria.dict())
-        session.add(nova_categoria)
-        session.commit()
-        session.refresh(nova_categoria)
-        return nova_categoria
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao criar categoria: {str(e)}")
+@app.get("/categorias", response_model=list[schemas.Categoria])
+def listar_categorias(db: Session = Depends(get_db)):
+    return db.query(Categoria).all()
 
-@app.get("/categorias", response_model=List[Categoria])
-def listar_categorias(session: Session = Depends(get_session)):
-    try:
-        return session.query(Categoria).all()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar categorias: {str(e)}")
+@app.post("/fornecedores", response_model=schemas.Fornecedor)
+def criar_fornecedor(fornecedor: schemas.FornecedorCreate, db: Session = Depends(get_db)):
+    db_forn = Fornecedor(**fornecedor.dict())
+    db.add(db_forn)
+    db.commit()
+    db.refresh(db_forn)
+    return db_forn
 
-@app.post("/fornecedores", response_model=Fornecedor)
-def criar_fornecedor(fornecedor: FornecedorCreate, session: Session = Depends(get_session)):
-    try:
-        novo_fornecedor = Fornecedor(**fornecedor.dict())
-        session.add(novo_fornecedor)
-        session.commit()
-        session.refresh(novo_fornecedor)
-        return novo_fornecedor
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao criar fornecedor: {str(e)}")
+@app.get("/fornecedores", response_model=list[schemas.Fornecedor])
+def listar_fornecedores(db: Session = Depends(get_db)):
+    return db.query(Fornecedor).all()
 
-@app.get("/fornecedores", response_model=List[Fornecedor])
-def listar_fornecedores(session: Session = Depends(get_session)):
-    try:
-        return session.query(Fornecedor).all()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar fornecedores: {str(e)}")
+from models.models import Produto, Categoria, Fornecedor, Cliente, Movimentacao
 
-@app.post("/clientes", response_model=Cliente)
-def criar_cliente(cliente: ClienteCreate, session: Session = Depends(get_session)):
-    try:
-        novo_cliente = Cliente(**cliente.dict())
-        session.add(novo_cliente)
-        session.commit()
-        session.refresh(novo_cliente)
-        return novo_cliente
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao criar cliente: {str(e)}")
 
-@app.get("/clientes", response_model=List[Cliente])
-def listar_clientes(session: Session = Depends(get_session)):
-    try:
-        return session.query(Cliente).all()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar clientes: {str(e)}")
+@app.post("/clientes", response_model=schemas.Cliente)
+def criar_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(get_db)):
+    db_cli = Cliente(**cliente.dict())
+    db.add(db_cli)
+    db.commit()
+    db.refresh(db_cli)
+    return db_cli
 
-@app.post("/movimentacoes", response_model=Movimentacao)
-def criar_movimentacao(movimentacao: MovimentacaoCreate, session: Session = Depends(get_session)):
-    try:
-        produto = session.get(Produto, movimentacao.mov_pro_id)
-        if not produto:
-            raise HTTPException(status_code=404, detail="Produto não encontrado")
+@app.get("/clientes", response_model=list[schemas.Cliente])
+def listar_clientes(db: Session = Depends(get_db)):
+    return db.query(Cliente).all()
 
-        if movimentacao.mov_quantidade <= 0:
-            raise HTTPException(status_code=400, detail="Quantidade deve ser maior que zero")
+@app.get("/clientes/{id}", response_model=schemas.Cliente)
+def buscar_cliente(id: int, db: Session = Depends(get_db)):
+    cli = db.query(Cliente).filter(Cliente.cli_id == id).first()
+    if not cli:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    return cli
 
-        if movimentacao.mov_tipo == "saida":
-            if produto.pro_quantidade < movimentacao.mov_quantidade:
-                raise HTTPException(status_code=400, detail="Estoque insuficiente")
-            produto.pro_quantidade -= movimentacao.mov_quantidade
-        else:
-            produto.pro_quantidade += movimentacao.mov_quantidade
+@app.post("/movimentacoes", response_model=schemas.Movimentacao)
+def registrar_movimentacao(mov: schemas.MovimentacaoCreate, db: Session = Depends(get_db)):
+    db_mov = Movimentacao(**mov.dict())
+    db.add(db_mov)
+    db.commit()
+    db.refresh(db_mov)
+    return db_mov
 
-        if movimentacao.mov_cli_id:
-            cliente = session.get(Cliente, movimentacao.mov_cli_id)
-            if not cliente:
-                raise HTTPException(status_code=404, detail="Cliente não encontrado")
+@app.get("/movimentacoes", response_model=list[schemas.Movimentacao])
+def listar_movimentacoes(db: Session = Depends(get_db)):
+    return db.query(Movimentacao).all()
 
-        nova_movimentacao = Movimentacao(
-            mov_pro_id=movimentacao.mov_pro_id,
-            mov_cli_id=movimentacao.mov_cli_id,
-            mov_motivo=movimentacao.mov_motivo,
-            mov_quantidade=movimentacao.mov_quantidade,
-            mov_tipo=movimentacao.mov_tipo,
-            mov_data=datetime.now()
-        )
-        
-        session.add(nova_movimentacao)
-        session.commit()
-        session.refresh(nova_movimentacao)
-        return nova_movimentacao
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao criar movimentação: {str(e)}")
-
-@app.get("/movimentacoes", response_model=List[Movimentacao])
-def listar_movimentacoes(session: Session = Depends(get_session)):
-    try:
-        return session.query(Movimentacao).all()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar movimentações: {str(e)}")
+@app.get("/movimentacoes/{id}", response_model=schemas.Movimentacao)
+def buscar_movimentacao(id: int, db: Session = Depends(get_db)):
+    mov = db.query(Movimentacao).filter(Movimentacao.mov_id == id).first()
+    if not mov:
+        raise HTTPException(status_code=404, detail="Movimentação não encontrada")
+    return mov
